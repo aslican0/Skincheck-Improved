@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="tr">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description"
+    content="SKINCHECK - Bakım ürünü analiz platformu. Ürün içeriklerini analiz edin, cilt tipinize uygunluğunu öğrenin.">
+  <title>SKINCHECK — Skincare Analyzer</title>
+  <link rel="stylesheet" href="styles.css?v=23">
+</head>
+
+<body>
+  <!-- ===== INGREDIENT ENCYCLOPEDIA SIDEBAR ===== -->
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
+  <aside class="encyclopedia-sidebar" id="encyclopediaSidebar">
+    <div class="sidebar-header">
+      <h2>📚 <span data-i18n="encyclopediaTitle">İçerik Ansiklopedisi</span></h2>
+      <button class="sidebar-close-btn" id="sidebarCloseBtn">✕</button>
+    </div>
+    <div class="sidebar-search">
+      <input type="text" id="encyclopediaSearch" placeholder="İçerik ara..."
+        data-i18n-placeholder="encyclopediaSearchPlaceholder">
+    </div>
+    <div class="sidebar-section-title" data-i18n="concernsTitle">Cilt Sorunları</div>
+    <div class="sidebar-concerns" id="sidebarConcerns"></div>
+    <div class="sidebar-section-title" data-i18n="ingredientsTitle">İçerikler</div>
+    <div class="sidebar-categories" id="sidebarCategories"></div>
+    <div class="sidebar-content" id="sidebarContent"></div>
+  </aside>
+
+  <div class="app-wrapper">
+    <!-- ===== HEADER ===== -->
+    <header class="app-header">
+      <div class="header-inner">
+        <div class="header-left">
+          <button class="sidebar-toggle-btn" id="sidebarToggleBtn" title="İçerik Ansiklopedisi" data-i18n-title="encyclopediaTitle">📚</button>
+          <a href="#" class="logo" id="logoHome">
+            <div class="logo-icon">🧬</div>
+            <span class="logo-text">SKINCHECK</span>
+          </a>
+        </div>
+        <div class="header-actions">
+          <div class="lang-selector">
+            <button class="lang-btn" id="langToggle">
+              <span>🌐</span>
+              <span id="currentLang">Türkçe</span>
+              <span>▾</span>
+            </button>
+            <div class="lang-dropdown" id="langDropdown">
+              <button class="lang-option active" data-lang="tr">🇹🇷 Türkçe</button>
+              <button class="lang-option" data-lang="en">🇬🇧 English</button>
+              <button class="lang-option" data-lang="de">🇩🇪 Deutsch</button>
+              <button class="lang-option" data-lang="fr">🇫🇷 Français</button>
+              <button class="lang-option" data-lang="es">🇪🇸 Español</button>
+              <button class="lang-option" data-lang="ar">🇸🇦 العربية</button>
+              <button class="lang-option" data-lang="ja">🇯🇵 日本語</button>
+              <button class="lang-option" data-lang="ko">🇰🇷 한국어</button>
+              <button class="lang-option" data-lang="zh">🇨🇳 中文</button>
+              <button class="lang-option" data-lang="ru">🇷🇺 Русский</button>
+            </div>
+          </div>
+          <!-- User Auth Button -->
+          <div class="user-auth-area" id="userAuthArea">
+            <button class="btn-icon auth-trigger" id="authTrigger" title="Giriş Yap" data-i18n-title="login">👤</button>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- ===== MAIN ===== -->
+    <main class="main-content">
+
+
+      <!-- Ingredient Detail Section (for encyclopedia details) -->
+      <section class="ingredient-section" id="ingredientSection" style="display:none;"></section>
+
+      <!-- Input Section -->
+      <section class="input-section" id="inputSection">
+        <div class="input-card">
+          <div id="analyzeModeContainer" style="display:flex; flex-direction:column; gap:0.5rem;">
+            <div id="aiChatBox" style="background:var(--bg-secondary); border-radius:8px; padding:0.75rem; height:200px; overflow-y:auto; display:none; flex-direction:column; gap:0.5rem; border:1px solid var(--border-color);">
+            </div>
+            
+            <div style="display:flex; gap:0.5rem; align-items:flex-end;">
+              <textarea id="aiChatInput" class="search-input" rows="1" style="flex:1; height:auto; min-height:40px; max-height:80px; padding:0.5rem 0.75rem; resize:none; border-radius:8px; font-family:inherit; font-size:14px;" placeholder="İçerik listesini yapıştırın veya sorun..." data-i18n-placeholder="aiChatPlaceholder"></textarea>
+              <button id="aiChatSendBtn" class="btn btn-primary" style="padding:0.5rem 1rem; border-radius:8px; height:100%; display:flex; align-items:center; gap:0.25rem; font-size:14px;">
+                <span data-i18n="send">Gönder</span> <span>🚀</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Routine Section (visible after quiz) -->
+      <section class="routine-section" id="routineSection"></section>
+
+      <!-- ===== RESULTS SECTION ===== -->
+      <section class="results-section" id="resultsSection">
+        <header class="results-header">
+          <div class="results-hero">
+            <h1 data-i18n="resultsTitle">Analiz Sonuçları</h1>
+            <p data-i18n="resultsSubtitle">Ürününüzün detaylı içerik analizi ve öneriler.</p>
+            <div class="results-mini-search" id="resultsMiniSearch">
+              <div class="mini-search-box" style="display:flex; gap:0.5rem; align-items:flex-end;">
+                <textarea id="miniSearchInput" class="search-input" rows="1" style="flex:1; height:auto; min-height:40px; max-height:80px; padding:0.5rem 0.75rem; resize:none; border-radius:8px; font-size:14px;" placeholder="Başka bir ürünün içeriklerini yapıştırın..." data-i18n-placeholder="miniSearchPlaceholder"></textarea>
+                <button id="miniSearchSendBtn" class="btn btn-primary" style="padding:0.5rem 1rem; border-radius:8px; display:flex; align-items:center; gap:0.25rem; font-size:14px;">
+                  <span data-i18n="analyze">Analiz Et</span> <span>🚀</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </header>
+        <div class="product-header" id="productHeader">
+          <div class="product-image" id="productImage">🧴</div>
+          <div class="product-info">
+            <h2 id="productName"></h2>
+            <p class="product-brand" id="productBrand"></p>
+            <div class="product-meta" id="productMeta"></div>
+            <div class="overall-score" id="overallScore"></div>
+          </div>
+        </div>
+        <!-- Stand-alone metrics added here -->
+        <div class="product-stand-alone-metrics" id="standAloneMetrics"></div>
+
+        <div class="result-tabs">
+          <button class="result-tab active" data-result="ingredientsPanel"><span>🧪</span> <span
+              data-i18n="rtIngredients">İçerikler</span></button>
+          <button class="result-tab" data-result="warningsPanel"><span>⚠️</span> <span
+              data-i18n="rtWarnings">Uyarılar</span></button>
+        </div>
+        <div class="result-panel active" id="ingredientsPanel">
+          <div class="ingredients-list" id="ingredientsList"></div>
+        </div>
+        <div class="result-panel" id="warningsPanel">
+          <div class="warnings-list" id="warningsList"></div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="app-footer">
+      <p>SKINCHECK © 2026 — <span data-i18n="footerText">Bakım ürünü analizi</span></p>
+      <p style="font-size: 0.75rem; opacity: 0.7; margin-top: 0.5rem;">Data powered by <a
+          href="https://world.openbeautyfacts.org" target="_blank"
+          style="color: inherit; text-decoration: underline;">Open Beauty Facts</a> (ODbL)</p>
+    </footer>
+  </div>
+
+  <!-- Loading Overlay -->
+  <div class="loading-overlay" id="loadingOverlay">
+    <div class="loading-spinner"></div>
+    <div class="loading-text" id="loadingText" data-i18n="loadingTitle">Ürün Analiz Ediliyor...</div>
+    <div class="loading-steps">
+      <div class="loading-step" id="ls0">🔍 <span data-i18n="ls0">Uluslararası veritabanları taranıyor</span></div>
+      <div class="loading-step" id="ls1">📋 <span data-i18n="ls1">İçerik listesi okunuyor</span></div>
+      <div class="loading-step" id="ls2">🧪 <span data-i18n="ls2">İçerikler analiz ediliyor</span></div>
+      <div class="loading-step" id="ls3">🎯 <span data-i18n="ls3">Cilt uygunluğu değerlendiriliyor</span></div>
+      <div class="loading-step" id="ls4">💰 <span data-i18n="ls4">Muadil ürünler aranıyor</span></div>
+    </div>
+  </div>
+
+  <!-- ===== AUTH MODAL ===== -->
+  <div class="modal-overlay" id="authModal">
+    <div class="modal-card auth-modal-card">
+      <button class="modal-close" id="authModalClose">✕</button>
+      <div class="auth-tabs">
+        <button class="auth-tab active" data-auth="login" data-i18n="login">Giriş Yap</button>
+        <button class="auth-tab" data-auth="register" data-i18n="register">Kayıt Ol</button>
+      </div>
+      <!-- Login Form -->
+      <form class="auth-form" id="loginForm">
+        <div class="form-group">
+          <label data-i18n="emailLabel">📧 E-posta</label>
+          <input type="email" id="loginEmail" placeholder="ornek@email.com" data-i18n-placeholder="emailPlaceholder" required>
+        </div>
+        <div class="form-group">
+          <label data-i18n="passwordLabel">🔒 Şifre</label>
+          <input type="password" id="loginPassword" placeholder="Şifreniz" data-i18n-placeholder="passwordPlaceholder" required>
+        </div>
+        <div class="form-options" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; font-size: 0.85rem;">
+          <label style="display: flex; align-items: center; cursor: pointer; color: var(--text-secondary);">
+            <input type="checkbox" id="rememberMe" style="margin-right: 0.5rem;"> <span data-i18n="rememberMe">Beni Hatırla</span>
+          </label>
+          <a href="#" id="forgotPasswordLink" style="color: var(--accent-primary); text-decoration: none;" data-i18n="forgotPassword">Şifremi Unuttum</a>
+        </div>
+        <div class="auth-error" id="loginError"></div>
+        <button type="submit" class="btn btn-primary btn-full" data-i18n="login">Giriş Yap</button>
+      </form>
+      <!-- Register Form -->
+      <form class="auth-form" id="registerForm" style="display:none;">
+        <div class="form-group">
+          <label data-i18n="nameLabel">👤 İsim</label>
+          <input type="text" id="registerName" placeholder="Adınız" data-i18n-placeholder="namePlaceholder" required>
+        </div>
+        <div class="form-group">
+          <label data-i18n="emailLabel">📧 E-posta</label>
+          <input type="email" id="registerEmail" placeholder="ornek@email.com" data-i18n-placeholder="emailPlaceholder" required>
+        </div>
+        <div class="form-group">
+          <label data-i18n="passwordLabel">🔒 Şifre</label>
+          <input type="password" id="registerPassword" placeholder="En az 4 karakter" data-i18n-placeholder="passMinLength" required minlength="4">
+        </div>
+        <div class="auth-error" id="registerError"></div>
+        <button type="submit" class="btn btn-primary btn-full" data-i18n="register">Kayıt Ol</button>
+      </form>
+      <!-- Reset Password Form -->
+      <form class="auth-form" id="resetPasswordForm" style="display:none;">
+        <div id="resetStep1">
+          <p style="font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 1rem;" data-i18n="resetDesc">Şifrenizi sıfırlamak için e-posta adresinizi girin.</p>
+          <div class="form-group">
+            <label data-i18n="emailLabel">📧 E-posta</label>
+            <input type="email" id="resetEmail" placeholder="ornek@email.com" data-i18n-placeholder="emailPlaceholder" required>
+          </div>
+          <button type="button" class="btn btn-primary btn-full" id="resetCheckBtn" data-i18n="continue">Devam Et</button>
+        </div>
+        <div id="resetStep2" style="display:none;">
+          <p style="font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 1rem;" data-i18n="newPassDesc">Yeni şifrenizi belirleyin.</p>
+          <div class="form-group">
+            <label data-i18n="passwordLabel">🔒 Yeni Şifre</label>
+            <input type="password" id="resetNewPassword" placeholder="En az 4 karakter" data-i18n-placeholder="passMinLength" required minlength="4">
+          </div>
+          <button type="submit" class="btn btn-primary btn-full" data-i18n="updatePassword">Şifreyi Güncelle</button>
+        </div>
+        <div class="auth-error" id="resetError"></div>
+        <a href="#" class="back-to-login" style="display: block; text-align: center; margin-top: 1rem; font-size: 0.85rem; color: var(--text-secondary); text-decoration: none;" data-i18n="backToLogin">← Giriş Ekranına Dön</a>
+      </form>
+    </div>
+  </div>
+
+  <!-- ===== SKIN QUIZ MODAL ===== -->
+  <div class="modal-overlay" id="quizModal">
+    <div class="modal-card quiz-modal-card">
+      <button class="modal-close" id="quizModalClose">✕</button>
+      <div class="quiz-header">
+        <button class="btn btn-secondary back-to-home" id="quizBackToHome" style="margin-bottom: 1rem; font-size: 0.8rem; padding: 0.4rem 0.8rem;">← <span data-i18n="backToHome">Ana Ekrana Dön</span></button>
+        <h2 data-i18n="quizTitle">🧬 Cilt Tipi Testi</h2>
+        <p class="quiz-subtitle" data-i18n="quizSubtitle">10 soruyla cilt tipinizi belirleyelim</p>
+        <div class="quiz-progress">
+          <div class="quiz-progress-bar" id="quizProgressBar" style="width:10%"></div>
+        </div>
+        <span class="quiz-step-label" id="quizStepLabel">1 / 10</span>
+      </div>
+      <div class="quiz-body" id="quizBody"></div>
+      <div class="quiz-nav">
+        <button class="btn btn-secondary" id="quizPrev" disabled data-i18n="prev">← Önceki</button>
+        <button class="btn btn-primary" id="quizNext" data-i18n="next">Sonraki →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== QUIZ RESULT MODAL ===== -->
+  <div class="modal-overlay" id="quizResultModal">
+    <div class="modal-card quiz-result-card">
+      <button class="btn btn-secondary back-to-home" id="quizResultBackToHome" style="margin-bottom: 1rem; font-size: 0.8rem; padding: 0.4rem 0.8rem;">← <span data-i18n="backToHome">Ana Ekrana Dön</span></button>
+      <div id="quizResultContent"></div>
+      <button class="btn btn-primary btn-full" id="quizResultClose" data-i18n="goToRoutine">Rutinime Git 🚀</button>
+    </div>
+  </div>
+
+  <script src="js/i18n.js?v=24"></script>
+  <script src="js/products.js?v=24"></script>
+  <script src="js/database.js?v=24"></script>
+  <script src="js/analyzer.js?v=24"></script>
+  <script src="js/recommender.js?v=24"></script>
+  <script src="js/auth.js?v=24"></script>
+  <script src="js/skinquiz.js?v=24"></script>
+  <script src="js/routine.js?v=24"></script>
+  <script src="js/excel-export.js?v=25"></script>
+  <script src="js/encyclopedia.js?v=24"></script>
+  <script src="js/app.js?v=24"></script>
+</body>
+
+</html>

@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+<head><meta charset="UTF-8"><title>Search Debug</title></head>
+<body style="font-family:monospace;padding:20px;background:#111;color:#eee;">
+<h2>🔍 Arama Debug Test</h2>
+<input id="q" type="text" placeholder="Ürün ara..." style="padding:8px;width:300px;font-size:16px;">
+<button onclick="testSearch()">Ara (Local)</button>
+<button onclick="testAPI()">API Test</button>
+<button onclick="testBarcode()">Barkod Test</button>
+<input id="barcodeQ" type="text" placeholder="Barkod..." style="padding:8px;width:200px;">
+<pre id="out" style="background:#222;padding:16px;margin-top:16px;border-radius:8px;white-space:pre-wrap;max-height:400px;overflow:auto;"></pre>
+
+<script src="js/i18n.js?v=13"></script>
+<script src="js/products.js?v=13"></script>
+<script src="js/database.js?v=13"></script>
+
+<script>
+const out = document.getElementById('out');
+function log(msg) { out.textContent += msg + '\n'; }
+
+// Wait for scripts to load
+window.addEventListener('DOMContentLoaded', () => {
+  try {
+    I18N.init();
+    log('✅ I18N OK');
+  } catch(e) { log('❌ I18N ERROR: ' + e.message); }
+  
+  try {
+    ProductStore.init();
+    log('✅ ProductStore OK - ' + ProductStore.products.length + ' ürün yüklendi');
+  } catch(e) { log('❌ ProductStore ERROR: ' + e.message); }
+});
+
+function testSearch() {
+  out.textContent = '';
+  const q = document.getElementById('q').value.trim();
+  log('🔍 Arama: "' + q + '"');
+  
+  // Test 1: searchLocal
+  try {
+    const localResults = ProductStore.searchLocal(q);
+    log('✅ LOCAL sonuçlar: ' + localResults.length + ' adet');
+    localResults.slice(0,5).forEach(p => log('  - ' + p.name + ' (' + p.brand + ')'));
+  } catch(e) { log('❌ LOCAL arama hatası: ' + e.message); }
+  
+  // Test 2: Full DATABASE.searchProducts (async)
+  log('\n⏳ API araması başlatılıyor...');
+  DATABASE.searchProducts(q, 1, false).then(result => {
+    log('✅ API sonuçlar: ' + result.products.length + ' adet (toplam: ' + result.total + ')');
+    result.products.slice(0,5).forEach(p => log('  - ' + p.name + ' (' + p.brand + ')'));
+  }).catch(e => {
+    log('❌ API arama hatası: ' + e.message);
+  });
+}
+
+function testAPI() {
+  out.textContent = '';
+  log('🌐 Open Beauty Facts API doğrudan test...');
+  fetch('https://world.openbeautyfacts.org/cgi/search.pl?search_terms=cosrx&search_simple=1&action=process&json=1&page_size=3')
+    .then(r => { log('Status: ' + r.status); return r.json(); })
+    .then(d => { log('✅ API çalışıyor! Bulunan: ' + (d.count || 0) + ' ürün'); })
+    .catch(e => log('❌ API HATASI: ' + e.message + '\n(CORS veya internet bağlantısı sorunu olabilir)'));
+}
+
+function testBarcode() {
+  out.textContent = '';
+  const barcode = document.getElementById('barcodeQ').value.trim() || '8809643510202';
+  log('📦 Barkod test: ' + barcode);
+  DATABASE.getProductByBarcode(barcode).then(p => {
+    if (p) log('✅ Bulundu: ' + p.name + ' (' + p.brand + ')');
+    else log('❌ Bulunamadı');
+  }).catch(e => log('❌ HATA: ' + e.message));
+}
+</script>
+</body>
+</html>
