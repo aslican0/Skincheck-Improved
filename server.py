@@ -8,16 +8,34 @@ from PIL import Image
 import io
 import excel_manager
 
+def load_env_file():
+    env_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), '.env')
+    if os.path.exists(env_file):
+        try:
+            with open(env_file, 'r', encoding='utf-8') as f:
+                for line in f:
+                    line = line.strip()
+                    if line and not line.startswith('#') and '=' in line:
+                        k, v = line.split('=', 1)
+                        os.environ.setdefault(k.strip(), v.strip().strip('"\''))
+        except Exception as e:
+            print("Warning: Could not read .env file:", e)
+
+load_env_file()
+
 app = Flask(__name__, static_folder=".", static_url_path="")
 CORS(app)
 
 DB_PATH = 'database.db'
 
-# Configure Gemini (you need to set GEMINI_API_KEY environment variable)
-# If not set, AI features will gracefully return an error
+# Configure Gemini (you can set GEMINI_API_KEY environment variable or .env file)
+# If not set, AI features will gracefully return clear informative messages
 API_KEY = os.environ.get("GEMINI_API_KEY", "")
 if API_KEY:
-    genai.configure(api_key=API_KEY)
+    try:
+        genai.configure(api_key=API_KEY)
+    except Exception as e:
+        print("Gemini API configure warning:", e)
 
 def init_db():
     conn = sqlite3.connect(DB_PATH)
@@ -74,6 +92,31 @@ def init_db():
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
     ''')
+
+    # Seed products catalog if empty
+    c.execute('SELECT COUNT(*) FROM products')
+    if c.fetchone()[0] == 0:
+        seed_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'products_seed.json')
+        if os.path.exists(seed_path):
+            try:
+                with open(seed_path, 'r', encoding='utf-8') as f:
+                    seed_prods = json.load(f)
+                for p in seed_prods:
+                    ing = p.get('ingredientNames', '')
+                    if isinstance(ing, list):
+                        ing = ", ".join(ing)
+                    c.execute('''
+                        INSERT OR IGNORE INTO products (id, barcode, name, brand, category, imageUrl, ingredientNames, quantity, veganStatus)
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    ''', (
+                        p.get('id'), p.get('barcode', ''), p.get('name', ''), p.get('brand', ''),
+                        p.get('category', ''), p.get('imageUrl', ''), ing,
+                        p.get('quantity', ''), p.get('veganStatus', 'unknown')
+                    ))
+                print(f"Database seeded with {len(seed_prods)} products from products_seed.json.")
+            except Exception as e:
+                print("Error seeding products from products_seed.json:", e)
+
     conn.commit()
     conn.close()
 
@@ -149,9 +192,10 @@ def analyze_image():
         return jsonify({"success": False, "error": "No image uploaded"}), 400
     
     if not API_KEY:
-        # For testing purposes if API key is not provided
-        # return dummy data or error
-        return jsonify({"success": False, "error": "Gemini API anahtarı ayarlanmamış (GEMINI_API_KEY ortam değişkenini ayarlayın)."}), 500
+        return jsonify({
+            "success": False, 
+            "error": "Gemini API anahtarı (GEMINI_API_KEY) tanımlı değil. Bu özelliği kullanmak için ortam değişkenini veya .env dosyasını ayarlayın. Uygulamanın diğer tüm özellikleri çalışmaya devam etmektedir."
+        }), 200
 
     file = request.files['image']
     try:
@@ -607,5 +651,6 @@ def serve_static(path):
 
 if __name__ == '__main__':
     init_db()
-    print("Server running on http://localhost:8090")
-    app.run(host='0.0.0.0', port=8090, debug=True)
+    port = int(os.environ.get("PORT", 8090))
+    print(f"Server running on http://localhost:{port}")
+    app.run(host='0.0.0.0', port=port, debug=False)

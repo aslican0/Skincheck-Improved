@@ -1,0 +1,45 @@
+# Python önbellek ve sanal ortamlar
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+env/
+ENV/
+
+# Ortam değişkenleri ve gizli anahtarlar
+.env
+.env.*
+!.env.example
+
+# Node.js bağımlılıkları ve loglar
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Gerçek kullanıcı veritabanı ve kullanıcı Excel dosyaları
+database.db
+*.db
+kullanici_girisleri.xlsx
+kullanici_girisleri_*.xlsx
+temp.json
+test.png
+
+# Derleme ve geçici dosyalar
+app_dist/
+scratch/
+scratch*
+check_project.py
+check_fetches.py
+test_*.py
+test_*.js
+
+# İç içe geçmiş eski yedek/kopya klasörleri
+FinalProject/
+mobile_app/
+
+# İşletim sistemi dosyaları
+.DS_Store
+Thumbs.db
+desktop.ini
